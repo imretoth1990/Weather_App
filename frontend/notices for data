@@ -1,0 +1,23 @@
+<p>current.<p>
+<li>last_updated ( last data update)
+<li>temp_c (temperature in celsius)
+<li>feelslike_c (temperature feeling)
+<li>is_day (change image on value changes (0, 1))
+<li>wind_kph
+
+<p>location.
+<li>localtime
+<li>country
+
+<p>condition.
+<li>code
+<li>icon
+<li>text
+
+https://www.weatherapi.com/docs/weather_conditions.json
+
+
+rgb(89, 125, 143)
+rgb(191, 207, 205)
+
+
