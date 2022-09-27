@@ -5,6 +5,7 @@ import cities from './cities.js'
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
+const body = document.querySelector('body');
 const rootElement = document.getElementById("root");
 let isRendered = null;
 
@@ -13,22 +14,46 @@ let isRendered = null;
 // Create Label, Input field and Submit Button
 
 const renderDOM = () => {
-  // Display input background
-  const displayInputBackground = document.createElement('div');
-  displayInputBackground.setAttribute('id', 'displayInputBackground');
-  rootElement.appendChild(displayInputBackground);
+  // Display header
+  const displayHeader = document.createElement('div');
+  displayHeader.setAttribute('id', 'displayHeader');
+  rootElement.appendChild(displayHeader);
   
   // Display input
-  const displayInput = document.createElement('div');
-  displayInput.setAttribute('id', 'displayInput');
-  displayInputBackground.appendChild(displayInput);
+  const titleContainer = document.createElement('div');
+  titleContainer.setAttribute('id', 'titleContainer');
+  displayHeader.appendChild(titleContainer);
   
+  // Display App title
+  const appTitle = document.createElement('h2');
+  appTitle.setAttribute('id', 'appTitle');
+  titleContainer.appendChild(appTitle);
+
+  const inputContainer = document.createElement('div');
+  inputContainer.setAttribute('id', 'inputContainer');
+  displayHeader.appendChild(inputContainer);
+
+  // Previous button
+  const leftButtonContainer = document.createElement('div');
+  leftButtonContainer.setAttribute('id', 'leftButtonContainer');
+  inputContainer.appendChild(leftButtonContainer);
+
+  const previousButton = document.createElement('button');
+  previousButton.setAttribute('id', 'previousButton');
+  leftButtonContainer.appendChild(previousButton);
+
+  const previousBtn = document.getElementById('previousButton');
+  previousBtn.textContent = '<'; 
+
   // Label
+  const searchBarContainer = document.createElement('div');
+  searchBarContainer.setAttribute('id', 'searchBarContainer');
+  inputContainer.appendChild(searchBarContainer);
+
   const labelElement = document.createElement("label");
   labelElement.setAttribute("for", "inputElement");
-  // displayInput.textContent = "Enter your location: ";
-  displayInput.appendChild(labelElement);
-  
+  // titleContainer.textContent = "Enter your location: ";
+  searchBarContainer.appendChild(labelElement);
   // Input
   const inputElement = document.createElement("input");
   inputElement.setAttribute('type', 'text');
@@ -37,14 +62,28 @@ const renderDOM = () => {
   inputElement.setAttribute("name", "inputElement");
   inputElement.setAttribute('placeholder', 'Enter your location');
   inputElement.setAttribute('autocomplete', 'off'); 
-  displayInput.appendChild(inputElement);  
+  searchBarContainer.appendChild(inputElement);  
+
+   // Next button
+
+   const rightButtonContainer = document.createElement('div');
+   rightButtonContainer.setAttribute('id', 'rightButtonContainer');
+   inputContainer.appendChild(rightButtonContainer);
+
+   const nextButton = document.createElement('button');
+   nextButton.setAttribute('id', 'nextButton');
+   rightButtonContainer.appendChild(nextButton);
+ 
+   const nextBtn = document.getElementById('nextButton');
+   nextBtn.textContent= '>';
+ 
   
   // Display button (newDiv)
 
   // Submit button
   const displayButton = document.createElement('div');
   displayButton.setAttribute('id', 'displayButton');
-  displayInput.appendChild(displayButton);
+  displayHeader.appendChild(displayButton);
 
   const submitBtn = document.createElement("button");
   submitBtn.setAttribute("id", "buttonElement");
@@ -52,7 +91,11 @@ const renderDOM = () => {
   displayButton.appendChild(submitBtn);
 
   // - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _
-  
+  // Display app title
+
+  const applicationTitle = document.getElementById('appTitle');
+  applicationTitle.textContent = 'Weather App';
+
   // Display weather container
   const displayWeatherContainer = document.createElement('div');
   displayWeatherContainer.setAttribute('id', 'displayWeatherContainer');
@@ -62,6 +105,7 @@ const renderDOM = () => {
   const weatherHeader = document.createElement('div');
   weatherHeader.setAttribute('id', 'weatherHeader');
   displayWeatherContainer.appendChild(weatherHeader);
+
   weatherHeader.innerHTML = `
   <p>Country: untracked location </p>
   <p>Local time: 00:00</p>
@@ -72,20 +116,31 @@ const renderDOM = () => {
   displayWeather.setAttribute('id', 'displayWeather');
   displayWeatherContainer.appendChild(displayWeather);
 
+  displayWeather.innerHTML = `
+  <h1>--</h1>
+  <h2>C°: --</h2>
+  <p>Feels like: --°</p>
+  <p>Wind: 0 kp/h</p>
+  `;
+
   // Display weather footer  
   const weatherFooter = document.createElement('div');
   weatherFooter.setAttribute('id', 'weatherFooter');
   displayWeatherContainer.appendChild(weatherFooter);
+
   weatherFooter.innerHTML = `
   <p>Short summary: --</p>
   <p>Last updated: yyyy/mm/dd</p>
   `;
 
-  displayWeather.innerHTML = `
-  <h2>C°: --</h2>
-  <p>Feels like: --°</p>
-  <p>Wind: 0 kp/h</p>
-  `;
+  // Display page footer
+  
+  const pageFooter = document.createElement('footer');
+  pageFooter.setAttribute('id', 'pageFooter');
+  body.appendChild(pageFooter);
+
+  const footer = document.getElementById('pageFooter');
+  footer.textContent = '@allRigthsReserved_byGeri&Imi';
 };
 
 // *** Functions ***
@@ -126,15 +181,19 @@ const limitSearch = () => {
     renderAutocomplete(filteredCities);
     isRendered = true;
   } else if (inputLength < 2 && isRendered) {
-    const datalist = document.getElementById("datalist");
+    deleteOptionList();
+  }
+};
+
+const deleteOptionList = () => {
+  const datalist = document.getElementById("datalist");
     datalist.remove();
     const options = document.getElementsByClassName("option");
     for (let i = 0; i < options.length; i++) {
       options[i].remove();
     }
     isRendered = null;
-  }
-};
+}
 
 // Get data from weather API
 
@@ -145,70 +204,31 @@ const fetchWeatherData = async () => {
   const url = "https://api.weatherapi.com/v1";
   const method = "/forecast.json";
   const key = "?key=489f1639341049318ba122521222609";
+  const days = "&days=3";
   let city = `&q=${cityInput}`;
 
   try {
     // Get data
-    const response = await fetch(url + method + key + city);
-    const data = await response.json();
-    // return data;
-    console.log(data);
-    renderWeatherData(data);
+    const response = await fetch(url + method + key + city + days);
+    const data = await response.json(); // -> current day
+    
+  
+    let forecastedDays = data.forecast.forecastday.map((day) => {
+      return  `<p>Day: ${new Date(day.date).toLocaleString('en-us', {weekday: 'short'})}</p>
+      <p>Short summary: <em>${day.day.condition.text}</em></p>
+      <img src="${day.day.condition.icon}"/>
+      <h2>Avg C°: ${day.day.avgtemp_c}</h2>
+      <p>Max wind: ${day.day.maxwind_kph} kph</p>`; 
+    });
+    
+    console.log(forecastedDays);
+  
+  renderWeatherData(data);
+
   } catch (error) {
     console.error(error);
   }
 };
-
-// forecast.forecastday[0].day
-
-/*  const forecastDiv = document.createElement("div")
-
- const generateForecastTable = () => {
-  // create a <table> element and a <tbody> element
-  const tbl = document.createElement("table");
-  const tblBody = document.createElement("tbody")
-
-  // create all cells
-  for (let i = 0; i<2; i++) {
-
-    //creates a table row
-    const row = document.createElement("tr");
-
-    for (let j = 0; j < 2; j++) {
-      // create a <td> element and a text node, make the text ...
-      // ... node the contents of the <td>, and put the <td> at ...
-      // ... the end of the table row
-      const cell = document.createElement("td");
-      const cellText = document.createTextNode(`cell in rrow ${i}, column${j}`);
-      cell.appendChild(cellText);
-      row.appendChild(cell);
-    }
-
-    // add the row to the end of the table body
-    tblbody.appendChild(row)
-  }
-  
-  // put the <tbody> in the <table>
-  tbl.appendChild(tblBody);
-  // append <table> into <body>
-  document.body.appendChild(tbl);
-  // set the border attribute of tbl to '2'
-  tbl.setAttribute("border", "2");
- }
-
-
-
-forecast.forecastday[0].day.daily_chance_of_rain
-
-
- display.innerHTML = `
-  <p>Short summary: <em>${forecast.forecastday[0].day.condition.text}</em></p>
-  <img src="${forecast.forecastday[0].day.condition.icon}"/>
-  <h2>Avg C°: ${forecast.forecastday[0].day.avgtemp_c}</h2>
-  <p>Max wind: ${forecast.forecastday[0].day.maxwind_kph} kph</p>
-  `;
-
- */
 
 
 // Display weather for requested location
@@ -226,6 +246,7 @@ const renderWeatherData = (object) => {
   
   displayWeatherText.innerHTML = `
   <img id='condition-icon'src="${object.current.condition.icon}"/>
+  <h1> ${object.location.name} </h1>
   <h2>C°: ${object.current.temp_c}</h2>
   <p>Feels like: ${object.current.feelslike_c} C°</p>
   <p>Wind: ${object.current.wind_kph} kph</p>
@@ -255,6 +276,10 @@ const fadeIn = () => {
   input.setAttribute('placeholder', 'Enter your location');
 };
 
+// const changeBackgroundImage(
+
+// )
+
 // *** Functions calls ***
 renderDOM();
 
@@ -263,7 +288,7 @@ renderDOM();
 // Get elements by ID
 const input = document.getElementById("inputElement");
 const submitBtn = document.getElementById("buttonElement");
-const displayInputBackground = document.getElementById('displayInputBackground');
+const displayHeader = document.getElementById('displayHeader');
 
 // Add event listener functions
 input.addEventListener('input', limitSearch);
@@ -277,6 +302,7 @@ input.addEventListener('keydown', (event) => {
 submitBtn.addEventListener("click", () => {
   fetchWeatherData();
   fadeIn();
+  deleteOptionList();
 });
 
 
