@@ -14,7 +14,7 @@ body {
 
 /* HEADER */
 #displayHeader {
-    background-color: rgba(48, 92, 115, 0.419);
+    background-color: rgba(48, 92, 115, 0.825);
     height:fit-content;
     padding: 20px;
     font-family: system-ui;
@@ -56,7 +56,7 @@ body {
     border: 1px solid #dddddd;
     border-radius: 50px;
     outline: none;
-    background-color: rgba(255, 255, 255, 0.196);
+    background-color: rgba(255, 255, 255, 0.342);
     color: #fff;
     font-size: medium;
     font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
@@ -126,15 +126,15 @@ body {
 }
 
 button {
-    background-color: rgba(255, 255, 255, 0.196);
+    background-color: rgba(255, 255, 255, 0.342);
 }
 
 button:hover {
-    box-shadow: 0px 2px 3px rgb(192, 185, 185);
+    box-shadow: 2px 3px 3px rgb(192, 185, 185);
 } 
 
 button:active {
-    transform: translateY(1.6px);
+    transform: translateY(3px);
 }
 
 #displayWeatherContainer {
@@ -217,3 +217,35 @@ button:active {
     text-align: center;
     bottom: 0;
 }
+
+#spinner:not([hidden]) {
+    position: fixed;
+    top: -222px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  #spinner::after {
+    content: "";
+    width: 80px;
+    height: 80px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #41daf2;
+    border-radius: 100%;
+    will-change: transform;
+    animation: spin 1s infinite linear
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  

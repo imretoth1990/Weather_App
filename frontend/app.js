@@ -119,6 +119,11 @@ const renderDOM = () => {
   displayWeatherContainer.setAttribute('id', 'displayWeatherContainer');
   rootElement.appendChild(displayWeatherContainer);
 
+  const spinner = document.createElement('div');
+  spinner.setAttribute('hidden', '');
+  spinner.setAttribute('id', 'spinner');
+  displayWeatherContainer.appendChild(spinner);
+
   // Display weather header
   const weatherHeader = document.createElement('div');
   weatherHeader.setAttribute('id', 'weatherHeader');
@@ -359,6 +364,7 @@ const changeBackgroundImage = (url) => {
 
 const getImagefromPexelsAPI = (city) => {
   // city => object.location.name
+  spinner.removeAttribute('hidden');
   fetch(`https://api.pexels.com/v1/search?query=${city}`,{
     headers: {
     Authorization: "563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927"
@@ -372,6 +378,7 @@ const getImagefromPexelsAPI = (city) => {
       let randomUrl = object[1].src.original;
       // console.log(randomUrl);
       // console.log(object)
+      spinner.setAttribute('hidden', '');
       changeBackgroundImage(randomUrl);
     })
     .catch((err) => console.error(err));
