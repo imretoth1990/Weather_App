@@ -69152,7 +69152,7 @@ const cities = {
   "Taszar": 1,
   "Tat": 1,
   "Tata": 1,
-  "Tatabanya": 1,
+  "Tatabánya": 1,
   "Tatahuicapan": 1,
   "Tatamy": 1,
   "Tataouine": 1,

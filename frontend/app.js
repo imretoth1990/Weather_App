@@ -1,13 +1,22 @@
 // Get data from cities.js
-
 import cities from './cities.js'
-
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
+const url = "https://api.weatherapi.com/v1";
+const key = "?key=489f1639341049318ba122521222609";
 const body = document.querySelector('body');
 const rootElement = document.getElementById("root");
+
 let isRendered = null;
+let isDay = null;
+let lastCityInput = null;
+let date = new Date()
+let urlDate = `&date=${date.toISOString().split('T')[0]}`;
+
+// Sound effects
+
+let enterStop = new Audio('enterStop.mp3');
 
 // *** DOM ***
 
@@ -18,7 +27,7 @@ const renderDOM = () => {
   const displayHeader = document.createElement('div');
   displayHeader.setAttribute('id', 'displayHeader');
   rootElement.appendChild(displayHeader);
-  
+
   // Display input
   const titleContainer = document.createElement('div');
   titleContainer.setAttribute('id', 'titleContainer');
@@ -57,12 +66,16 @@ const renderDOM = () => {
   // Input
   const inputElement = document.createElement("input");
   inputElement.setAttribute('type', 'text');
-  inputElement.setAttribute('list', 'datalist');
   inputElement.setAttribute("id", "inputElement");
+  inputElement.setAttribute('list', 'favorite');
   inputElement.setAttribute("name", "inputElement");
   inputElement.setAttribute('placeholder', 'Enter your location');
-  inputElement.setAttribute('autocomplete', 'off'); 
   searchBarContainer.appendChild(inputElement);  
+
+    // Create favorite datalist
+    const favoriteDatalist = document.createElement("datalist");
+    favoriteDatalist.setAttribute('id', 'favorite');
+    searchBarContainer.appendChild(favoriteDatalist);
 
    // Next button
 
@@ -86,9 +99,14 @@ const renderDOM = () => {
   displayHeader.appendChild(displayButton);
 
   const submitBtn = document.createElement("button");
-  submitBtn.setAttribute("id", "buttonElement");
+  submitBtn.setAttribute("id", "submitBtn");
   submitBtn.textContent = "OK";
   displayButton.appendChild(submitBtn);
+
+  const addFavorite = document.createElement('button');
+  addFavorite.setAttribute('id', 'addFavorite');
+  addFavorite.textContent = "+";
+  displayButton.appendChild(addFavorite); 
 
   // - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _
   // Display app title
@@ -120,7 +138,7 @@ const renderDOM = () => {
   <h1>--</h1>
   <h2>C°: --</h2>
   <p>Feels like: --°</p>
-  <p>Wind: 0 kp/h</p>
+  <p>Wind: 0 kph</p>
   `;
 
   // Display weather footer  
@@ -150,10 +168,11 @@ const renderDOM = () => {
 const renderAutocomplete = (listOfCities) => {
   // DOM
 
-  // Create datalist
+  // Create autocomplete datalist
   const datalistElement = document.createElement("datalist");
   datalistElement.setAttribute("id", "datalist");
-  root.appendChild(datalistElement);
+  datalistElement.setAttribute("autocomplete", "off");
+  rootElement.appendChild(datalistElement);
 
   // Create options with value from listOfCities
   if (listOfCities.length === 0) {
@@ -176,6 +195,10 @@ const limitSearch = () => {
   const input = document.getElementById("inputElement");
   const userInput = input.value;
   const inputLength = userInput.length;
+  if (inputLength !== 0) {
+    input.removeAttribute('list', 'favorite');
+    input.setAttribute('list', 'datalist');
+  }
   if (inputLength > 2 && !isRendered) {
     const filteredCities = cityNames.filter((item) => item.toLowerCase().includes(userInput.toLowerCase()));
     renderAutocomplete(filteredCities);
@@ -186,7 +209,10 @@ const limitSearch = () => {
 };
 
 const deleteOptionList = () => {
-  const datalist = document.getElementById("datalist");
+    inputElement.removeAttribute('list');
+    inputElement.setAttribute('list', 'favorite');
+    // Delete autocomplete datalist
+    const datalist = document.getElementById('datalist');
     datalist.remove();
     const options = document.getElementsByClassName("option");
     for (let i = 0; i < options.length; i++) {
@@ -199,35 +225,72 @@ const deleteOptionList = () => {
 
 const fetchWeatherData = async () => {
   const input = document.getElementById("inputElement");
+  const method = "/current.json";
+  
+  // save input so that if we change date and press OK, then the current day will be shown
   let cityInput = input.value;
-  // Set url
-  const url = "https://api.weatherapi.com/v1";
-  const method = "/forecast.json";
-  const key = "?key=489f1639341049318ba122521222609";
-  const days = "&days=3";
-  let city = `&q=${cityInput}`;
+  if (cityInput !== lastCityInput && cityInput !== '') lastCityInput = input.value;  
+  let city = `&q=${lastCityInput}`;
+
+  if (!lastCityInput) return;
 
   try {
     // Get data
-    const response = await fetch(url + method + key + city + days);
-    const data = await response.json(); // -> current day
+    const response = await fetch(url + method + key + city + urlDate);
+    const data = await response.json();    
+    isDay = data.current.is_day;  
+    renderWeatherData(data);
     
-  
-    let forecastedDays = data.forecast.forecastday.map((day) => {
-      return  `<p>Day: ${new Date(day.date).toLocaleString('en-us', {weekday: 'short'})}</p>
-      <p>Short summary: <em>${day.day.condition.text}</em></p>
-      <img src="${day.day.condition.icon}"/>
-      <h2>Avg C°: ${day.day.avgtemp_c}</h2>
-      <p>Max wind: ${day.day.maxwind_kph} kph</p>`; 
-    });
-    
-    console.log(forecastedDays);
-  
-  renderWeatherData(data);
-
   } catch (error) {
     console.error(error);
   }
+};
+
+const fetchNextOrPrevious = async (searchRequirement) => {
+  const method = `/${searchRequirement}.json`;
+  try {
+    const response = await fetch(url + method + key + `&q=${lastCityInput}` + urlDate);
+    const data = await response.json(); 
+    renderNextOrPrevious(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const renderNextOrPrevious = (object) => {
+  document.getElementById("displayWeather").classList.remove("nightBackground")
+  let forecastDay = object.forecast.forecastday[0]
+
+  if (forecastDay.date === object.location.localtime.split(" ")[0]) return renderWeatherData(object);
+  
+  const displayWeather = document.getElementById("displayWeather");
+  const displayWeatherText = document.getElementById('displayWeather');
+  const displayHeaderText = document.getElementById('weatherHeader');
+  const displayFooterText = document.getElementById('weatherFooter');
+  
+  displayWeather.classList.remove("nightBackground");  
+
+  displayWeatherText.innerHTML = `
+  <img id='condition-icon' src="${forecastDay.day.condition.icon}"/>
+  <h1> ${object.location.name} </h1>
+  <h2>Avg C°: ${forecastDay.day.avgtemp_c}</h2>
+  <p>Feels like: -- </p>
+  <p>Max wind: ${forecastDay.day.maxwind_kph} kph</p>
+  `;
+  
+  let message = null;
+
+  date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = "Past weather" : message = "Forecast";
+
+  displayHeaderText.innerHTML = `
+  <p>Country: ${object.location.country} </p>
+  <p>${message}: <b>${new Date(forecastDay.date).toLocaleString('en-us', {weekday: 'long'})}</b>, ${forecastDay.date}</p>
+  `;
+  
+  displayFooterText.innerHTML = `
+  <p>Short summary: <em>${forecastDay.day.condition.text}</em></p>
+  <p>Last updated: yyyy/mm/dd</p>
+  `;
 };
 
 
@@ -236,9 +299,8 @@ const fetchWeatherData = async () => {
 const renderWeatherData = (object) => {
   const displayWeather = document.getElementById("displayWeather");
 
-  if (object.current.is_day === 1 && displayWeather.classList.contains("nightBackground")) {
-    displayWeather.classList.toggle("nightBackground");
-  }
+  if (!isDay) displayWeather.classList.add("nightBackground");
+  else displayWeather.classList.remove("nightBackground");
 
   const displayWeatherText = document.getElementById('displayWeather');
   const displayHeaderText = document.getElementById('weatherHeader');
@@ -261,8 +323,9 @@ const renderWeatherData = (object) => {
   <p>Short summary: <em>${object.current.condition.text}</em></p>
   <p>Last updated: ${object.current.last_updated}</p>
   `;
-
-  if (object.current.is_day === 0) displayWeather.classList.toggle("nightBackground"); 
+  
+  const cityName = object.location.name;
+  getImagefromPexelsAPI(cityName);
 }
 
 const fadeOut = () => {
@@ -276,10 +339,46 @@ const fadeIn = () => {
   input.setAttribute('placeholder', 'Enter your location');
 };
 
-// const changeBackgroundImage(
+const saveFavorite = () => {
+  const favDatList = document.getElementById('favorite');
+  const option = document.createElement('option');
+  option.setAttribute('value', input.value);
 
-// )
+  if (cityNames.includes(input.value)) {
+    favDatList.appendChild(option);
+    alert(`Saved to favorites succesfully!`);
+  } else {
+    alert('Enter a valid value');
+  }
+};
 
+const changeBackgroundImage = (url) => {
+  // body.style.removeAttribute('backgroundImage');
+  body.style.backgroundImage = `url('${url}')`;
+}
+
+const getImagefromPexelsAPI = (city) => {
+  // city => object.location.name
+  fetch(`https://api.pexels.com/v1/search?query=${city}`,{
+    headers: {
+    Authorization: "563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927"
+    }
+  })
+    .then((resp) => resp.json())
+    .then((data) => {
+      let object = data.photos;
+      console.log("object", object);
+      // let randomIndex = Math.floor(Math.random() * object.length - 1);
+      let randomUrl = object[1].src.original;
+      // console.log(randomUrl);
+      // console.log(object)
+      changeBackgroundImage(randomUrl);
+    })
+    .catch((err) => console.error(err));
+};
+
+
+  
 // *** Functions calls ***
 renderDOM();
 
@@ -287,22 +386,64 @@ renderDOM();
 
 // Get elements by ID
 const input = document.getElementById("inputElement");
-const submitBtn = document.getElementById("buttonElement");
+const submitBtn = document.getElementById("submitBtn");
+const nextBtn = document.getElementById('nextButton');
+const previousBtn = document.getElementById('previousButton');
 const displayHeader = document.getElementById('displayHeader');
 
 // Add event listener functions
-input.addEventListener('input', limitSearch);
-input.addEventListener('click', fadeOut);
+input.addEventListener('input', () => {
+  limitSearch();
+});
+
+input.addEventListener('click', (ev) => {
+  fadeOut();
+  const listValue = inputElement.getAttribute('list');
+  if(listValue === "") {
+    inputElement.setAttribute('list', 'favorite');
+  }
+});
 input.addEventListener('keydown', (event) => {
   if (event.key === "Enter") {
     input.value = input.value[0].toUpperCase() + input.value.slice(1);
+    if (cityNames.includes(input.value)) {
+      fetchWeatherData();
+      fadeIn();
+      deleteOptionList();
+    } else {
+      enterStop.play();
+    }
   }
 });
 
 submitBtn.addEventListener("click", () => {
   fetchWeatherData();
   fadeIn();
-  deleteOptionList();
+  deleteOptionList();  
 });
 
 
+addFavorite.addEventListener('click', saveFavorite);
+
+document.body.addEventListener("click", (event) => {
+  if (event.target === submitBtn && lastCityInput) {
+    urlDate = `&date=${new Date().toISOString().split('T')[0]}`;
+    date = new Date();
+  }
+
+  if (event.target === previousBtn && lastCityInput) {
+    date.setDate(date.getDate() - 1);
+    urlDate = `&date=${date.toISOString().split('T')[0]}`;
+    if(date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+      fetchNextOrPrevious("history");
+    } else fetchNextOrPrevious("forecast");
+  } 
+
+  if (event.target === nextBtn && lastCityInput) {
+    date.setDate(date.getDate() + 1);
+    urlDate = `&date=${date.toISOString().split('T')[0]}`;
+    if(date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+      fetchNextOrPrevious("history");
+    } else fetchNextOrPrevious("forecast");
+  }
+});
