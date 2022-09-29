@@ -21,6 +21,7 @@ let urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
 
 let isPlaying = false;
 let transparency = 1; 
+let volume = 10;
 
 // Sound effects
 
@@ -283,7 +284,8 @@ const fetchWeatherData = async () => {
   try {
     // Get data
     const response = await fetch(url + method + key + city + urlDate);
-    const data = await response.json();    
+    const data = await response.json(); 
+    console.log(data)  
     isDay = data.current.is_day;
     renderWeatherData(data);    
   } catch (error) {
@@ -309,13 +311,13 @@ const renderNextOrPrevious = (object) => {
   if (forecastDay.date === object.location.localtime.split(' ')[0]) return renderWeatherData(object);
   
   const displayWeather = document.getElementById('displayWeather');
-  const displayWeatherText = document.getElementById('displayWeather');
-  const displayHeaderText = document.getElementById('weatherHeader');
-  const displayFooterText = document.getElementById('weatherFooter');
+  let displayWeatherText = document.getElementById('displayWeather').innerHTML;
+  let displayHeaderText = document.getElementById('weatherHeader').innerHTML;
+  let displayFooterText = document.getElementById('weatherFooter').innerHTML;
   
   displayWeather.classList.remove('nightBackground');  
 
-  displayWeatherText.innerHTML = `
+  displayWeatherText = `
   <img id='condition-icon' src='${forecastDay.day.condition.icon}'/>
   <h1> ${object.location.name} </h1>
   <h2>Avg C°: ${forecastDay.day.avgtemp_c}</h2>
@@ -327,12 +329,12 @@ const renderNextOrPrevious = (object) => {
 
   requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = 'Past weather' : message = 'Forecast';
 
-  displayHeaderText.innerHTML = `
+  displayHeaderText = `
   <p>Country: ${object.location.country} </p>
   <p>${message}: <b>${new Date(forecastDay.date).toLocaleString('en-us', {weekday: 'long'})}</b>, ${forecastDay.date}</p>
   `;
   
-  displayFooterText.innerHTML = `
+  displayFooterText = `
   <p>Short summary: <em>${forecastDay.day.condition.text}</em></p>
   <p>Last updated: yyyy/mm/dd</p>
   `;
@@ -343,7 +345,7 @@ const getCityID = (city) => {
     method: 'GET',
     headers: {
       'X-RapidAPI-Key': 'be335f03a5mshac0ad05272f77bfp159179jsn81033b82a8e1',
-		'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
+		  'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
 	}
 };  
 
@@ -361,10 +363,12 @@ const getCityID = (city) => {
 // Display weather for requested location
 
 const renderWeatherData = (object) => {
-  const displayWeather = document.getElementById('displayWeather');
+  // const displayWeather = document.getElementById('displayWeather');
 
-  if (!isDay) displayWeather.classList.add('nightBackground');
-  else displayWeather.classList.remove('nightBackground');
+  // if (!isDay) displayWeather.classList.add('nightBackground');
+  // else displayWeather.classList.remove('nightBackground');
+
+  changeWeatherDisplayImage(object.current.condition.text);
 
   const displayWeatherText = document.getElementById('displayWeather');
   const displayHeaderText = document.getElementById('weatherHeader');
@@ -445,6 +449,31 @@ const getRadioStation = (cityID) => {
     })
     .catch(err => console.error(err));
 };
+
+const changeWeatherDisplayImage = (object) => {
+
+  let displayWeather = document.getElementById('displayWeather');
+
+  if (isDay) {
+    // Nappali kepek
+    switch(object.includes()) {
+      case 'rain':
+        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')";
+      default:
+        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')";
+    }
+
+
+  } else if (!isDay) {
+    // Ejszakai kepek
+    switch(object.includes()) {
+      case 'rain':
+        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
+      default:
+        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
+    }
+  }
+}
   
 // *** Functions calls ***
 renderDOM();
@@ -563,37 +592,40 @@ const volumeMinus = document.getElementById('volumeMinus');
 const container = document.getElementById('audioButtons');
 
 volumeMinus.addEventListener('click', () => {
-  console.log(radio.volume);
+  console.log(volume);
 
-  if ( radio.volume >= 1) {
+  if ( volume < 10) {
     volumePlus.setAttribute('class', 'active');
-    volumePlus.style.backgroundColor = 'rgba(127, 255, 212, 0.621)';
+    volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 0.5)';
   } 
   if (radio.volume > 0 && radio.volume !== 1.3877787807814457e-16) {
     radio.volume -= 0.1;
     transparency -= 0.1;
-    container.style.backgroundColor = `hsla(169, 23%, 68%, ${transparency})`;
-  } else {
+    volume -= 1;
+    container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
+  } 
+  
+  if (volume === 0){
     volumeMinus.removeAttribute('class', 'active');
     volumeMinus.style.backgroundColor = 'rgba(255, 0, 0)';
   }
 });
 
 volumePlus.addEventListener('click', () => {
-  console.log(radio.volume);
+  console.log(volume);
 
-  if (radio.volume !== 1.3877787807814457e-16) {
-    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.516)';
-  
+  if (volume > 0) {
+    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
     volumeMinus.setAttribute('class', 'active');
   }
 
-  if (radio.volume < 1) {
+  if (volume < 10) {
       radio.volume += 0.1;
       transparency += 0.1;
-      container.style.backgroundColor = `hsla(169, 23%, 68%, ${transparency})`;
-    } else if (radio.volume >= 1) {
-      volumePlus.style.backgroundColor = 'rgba(127, 255, 212)';
+      volume += 1;
+      container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
+    } else if (volume === 10) {
+      volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 1)';
       volumePlus.removeAttribute('class', 'active');
     }
   });

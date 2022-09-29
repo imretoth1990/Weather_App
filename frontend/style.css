@@ -18,7 +18,7 @@ body {
 
 /* HEADER */
 #displayHeader {
-    background-color: rgba(48, 92, 115, 0.825);
+    background-color: rgba(48, 92, 115, 0.606);
     height:fit-content;
     padding: 20px;
     font-family: system-ui;
@@ -135,14 +135,14 @@ body {
     justify-content: center;
     align-items: center;
     margin-top: -445px;
-    background-color: hsla(169, 23%, 68%, 1);
+    background-color: rgb(255, 255, 255);
     border-radius: 25px;
-    width: 350px;
-    height: 80px;
+    width: 325px;
+    height: 75px;
 }
 
 #playBtn {
-    background-color: rgba(127, 255, 212, 0.621);
+    background-color: rgba(127, 255, 212);
     font-size: 23px;
 } 
 
@@ -158,11 +158,11 @@ body {
 
 #volumeMinus {
     margin-right: 25px;
-    background-color: rgba(255, 0, 0, 0.516);
+    background-color: rgba(255, 0, 0, 0.6);
 }
 
 #volumePlus {
-    background-color: rgba(172, 255, 47, 0.419);
+    background-color: rgba(172, 255, 47, 0.5);
 }
 
 #volumeMinus, #volumePlus {
@@ -198,8 +198,11 @@ button:hover {
 #displayWeather {
     position: absolute;
     font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
-    width: 60%;
+    width: 400px;
     background-color: rgba(48, 92, 115, 0.825);
+   /*  background-image: url(/frontend/displayWeather_images/clear_night.jpeg); */
+    background-repeat: no-repeat;
+    background-size: cover;
     border-radius: 30px;
     padding-top: 10px;
     padding-left: 25px;
@@ -263,7 +266,7 @@ button:hover {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 50px;
+    bottom: 55px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -271,10 +274,10 @@ button:hover {
   
   #spinner::after {
     content: "";
-    width: 80px;
-    height: 80px;
-    border: 4px solid #ffffff;
-    border-top: 4px solid #00ffe5;
+    width: 65px;
+    height: 65px;
+    border: 3px solid #ffffff;
+    border-top: 3px solid #00ffe5;
     border-radius: 100%;
     will-change: transform;
     animation: spin 1s infinite linear;
@@ -291,8 +294,8 @@ button:hover {
   
   #pageFooter {
     
-    background-color: rgba(48, 92, 115, 0.286);
-    color: rgba(255, 255, 255, 0.537);
+    background-color: rgba(48, 92, 115, 0.589);
+    color: rgba(255, 255, 255, 0.708);
     padding: 10px;
     margin-top: auto;
     text-align: center;
