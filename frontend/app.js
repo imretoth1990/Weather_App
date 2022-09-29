@@ -3,20 +3,29 @@ import cities from './cities.js'
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
-const url = "https://api.weatherapi.com/v1";
-const key = "?key=489f1639341049318ba122521222609";
+const url = 'https://api.weatherapi.com/v1';
+const key = '?key=489f1639341049318ba122521222609';
 const body = document.querySelector('body');
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 
 let isRendered = null;
 let isDay = null;
 let lastCityInput = null;
-let date = new Date()
-let urlDate = `&date=${date.toISOString().split('T')[0]}`;
+let lastCity = null;
+
+let referenceDate = new Date();
+referenceDate.setDate(referenceDate.getDate() + 15);
+
+let requestedDate = new Date();
+let urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
+
+let isPlaying = false;
+let transparency = 1; 
 
 // Sound effects
 
 let enterStop = new Audio('enterStop.mp3');
+let radio;
 
 // *** DOM ***
 
@@ -49,6 +58,7 @@ const renderDOM = () => {
 
   const previousButton = document.createElement('button');
   previousButton.setAttribute('id', 'previousButton');
+  previousButton.setAttribute('class', 'active');
   leftButtonContainer.appendChild(previousButton);
 
   const previousBtn = document.getElementById('previousButton');
@@ -59,23 +69,24 @@ const renderDOM = () => {
   searchBarContainer.setAttribute('id', 'searchBarContainer');
   inputContainer.appendChild(searchBarContainer);
 
-  const labelElement = document.createElement("label");
-  labelElement.setAttribute("for", "inputElement");
-  // titleContainer.textContent = "Enter your location: ";
+  const labelElement = document.createElement('label');
+  labelElement.setAttribute('for', 'inputElement');
+  // titleContainer.textContent = 'Enter your location: ';
   searchBarContainer.appendChild(labelElement);
+
   // Input
-  const inputElement = document.createElement("input");
+  const inputElement = document.createElement('input');
   inputElement.setAttribute('type', 'text');
-  inputElement.setAttribute("id", "inputElement");
+  inputElement.setAttribute('id', 'inputElement');
   inputElement.setAttribute('list', 'favorite');
-  inputElement.setAttribute("name", "inputElement");
+  inputElement.setAttribute('name', 'inputElement');
   inputElement.setAttribute('placeholder', 'Enter your location');
   searchBarContainer.appendChild(inputElement);  
 
-    // Create favorite datalist
-    const favoriteDatalist = document.createElement("datalist");
-    favoriteDatalist.setAttribute('id', 'favorite');
-    searchBarContainer.appendChild(favoriteDatalist);
+  // Create favorite datalist
+  const favoriteDatalist = document.createElement('datalist');
+  favoriteDatalist.setAttribute('id', 'favorite');
+  searchBarContainer.appendChild(favoriteDatalist);
 
    // Next button
 
@@ -85,6 +96,7 @@ const renderDOM = () => {
 
    const nextButton = document.createElement('button');
    nextButton.setAttribute('id', 'nextButton');
+   nextButton.setAttribute('class', 'active');
    rightButtonContainer.appendChild(nextButton);
  
    const nextBtn = document.getElementById('nextButton');
@@ -98,14 +110,16 @@ const renderDOM = () => {
   displayButton.setAttribute('id', 'displayButton');
   displayHeader.appendChild(displayButton);
 
-  const submitBtn = document.createElement("button");
-  submitBtn.setAttribute("id", "submitBtn");
-  submitBtn.textContent = "OK";
+  const submitBtn = document.createElement('button');
+  submitBtn.setAttribute('id', 'submitBtn');
+  submitBtn.setAttribute('class', 'active');
+  submitBtn.textContent = 'OK';
   displayButton.appendChild(submitBtn);
 
   const addFavorite = document.createElement('button');
   addFavorite.setAttribute('id', 'addFavorite');
-  addFavorite.textContent = "+";
+  addFavorite.setAttribute('class', 'active');
+  addFavorite.textContent = '+';
   displayButton.appendChild(addFavorite); 
 
   // - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _ - _
@@ -122,7 +136,34 @@ const renderDOM = () => {
   const spinner = document.createElement('div');
   spinner.setAttribute('hidden', '');
   spinner.setAttribute('id', 'spinner');
-  displayWeatherContainer.appendChild(spinner);
+  rootElement.appendChild(spinner);
+
+  // Create audio button container 
+  
+  const audioButtonContainer = document.createElement('div');
+  audioButtonContainer.setAttribute('id', 'audioButtons');
+  displayWeatherContainer.appendChild(audioButtonContainer);
+
+
+  // Play button (child from displayWeatherContainer)
+
+  const playButtonElement = document.createElement('button');
+  playButtonElement.setAttribute('id', 'playBtn');
+  playButtonElement.setAttribute('class', 'active');
+  playButtonElement.textContent = '▶️';
+  audioButtonContainer.appendChild(playButtonElement);
+
+  const volumeMinusElement = document.createElement('button');
+  volumeMinusElement.setAttribute('id', 'volumeMinus');
+  volumeMinusElement.setAttribute('class', 'active');
+  volumeMinusElement.textContent = '－';
+  audioButtonContainer.appendChild(volumeMinusElement);
+
+  const volumePlusElement = document.createElement('button');
+  volumePlusElement.setAttribute('id', 'volumePlus');
+  volumePlusElement.setAttribute('class', 'active');
+  volumePlusElement.textContent = '＋';
+  audioButtonContainer.appendChild(volumePlusElement);
 
   // Display weather header
   const weatherHeader = document.createElement('div');
@@ -156,7 +197,7 @@ const renderDOM = () => {
   <p>Last updated: yyyy/mm/dd</p>
   `;
 
-  // Display page footer
+//   // Display page footer
   
   const pageFooter = document.createElement('footer');
   pageFooter.setAttribute('id', 'pageFooter');
@@ -174,9 +215,9 @@ const renderAutocomplete = (listOfCities) => {
   // DOM
 
   // Create autocomplete datalist
-  const datalistElement = document.createElement("datalist");
-  datalistElement.setAttribute("id", "datalist");
-  datalistElement.setAttribute("autocomplete", "off");
+  const datalistElement = document.createElement('datalist');
+  datalistElement.setAttribute('id', 'datalist');
+  datalistElement.setAttribute('autocomplete', 'off');
   rootElement.appendChild(datalistElement);
 
   // Create options with value from listOfCities
@@ -184,10 +225,10 @@ const renderAutocomplete = (listOfCities) => {
     alert('Please enter a valid value!');    
   } else {
     listOfCities.forEach((item) => {
-      const datalist = document.getElementById("datalist");
-      const optionElement = document.createElement("option");
-      optionElement.setAttribute("class", "option");
-      optionElement.setAttribute("value", item);
+      const datalist = document.getElementById('datalist');
+      const optionElement = document.createElement('option');
+      optionElement.setAttribute('class', 'option');
+      optionElement.setAttribute('value', item);
       // optionElement.textContent = item;
       datalist.appendChild(optionElement);
     });
@@ -197,7 +238,7 @@ const renderAutocomplete = (listOfCities) => {
 // Call autocomplete after 2nd letter
 
 const limitSearch = () => {
-  const input = document.getElementById("inputElement");
+  const input = document.getElementById('inputElement');
   const userInput = input.value;
   const inputLength = userInput.length;
   if (inputLength !== 0) {
@@ -219,7 +260,7 @@ const deleteOptionList = () => {
     // Delete autocomplete datalist
     const datalist = document.getElementById('datalist');
     datalist.remove();
-    const options = document.getElementsByClassName("option");
+    const options = document.getElementsByClassName('option');
     for (let i = 0; i < options.length; i++) {
       options[i].remove();
     }
@@ -229,8 +270,8 @@ const deleteOptionList = () => {
 // Get data from weather API
 
 const fetchWeatherData = async () => {
-  const input = document.getElementById("inputElement");
-  const method = "/current.json";
+  const input = document.getElementById('inputElement');
+  const method = '/current.json';
   
   // save input so that if we change date and press OK, then the current day will be shown
   let cityInput = input.value;
@@ -243,9 +284,8 @@ const fetchWeatherData = async () => {
     // Get data
     const response = await fetch(url + method + key + city + urlDate);
     const data = await response.json();    
-    isDay = data.current.is_day;  
-    renderWeatherData(data);
-    
+    isDay = data.current.is_day;
+    renderWeatherData(data);    
   } catch (error) {
     console.error(error);
   }
@@ -263,20 +303,20 @@ const fetchNextOrPrevious = async (searchRequirement) => {
 };
 
 const renderNextOrPrevious = (object) => {
-  document.getElementById("displayWeather").classList.remove("nightBackground")
+  document.getElementById('displayWeather').classList.remove('nightBackground')
   let forecastDay = object.forecast.forecastday[0]
 
-  if (forecastDay.date === object.location.localtime.split(" ")[0]) return renderWeatherData(object);
+  if (forecastDay.date === object.location.localtime.split(' ')[0]) return renderWeatherData(object);
   
-  const displayWeather = document.getElementById("displayWeather");
+  const displayWeather = document.getElementById('displayWeather');
   const displayWeatherText = document.getElementById('displayWeather');
   const displayHeaderText = document.getElementById('weatherHeader');
   const displayFooterText = document.getElementById('weatherFooter');
   
-  displayWeather.classList.remove("nightBackground");  
+  displayWeather.classList.remove('nightBackground');  
 
   displayWeatherText.innerHTML = `
-  <img id='condition-icon' src="${forecastDay.day.condition.icon}"/>
+  <img id='condition-icon' src='${forecastDay.day.condition.icon}'/>
   <h1> ${object.location.name} </h1>
   <h2>Avg C°: ${forecastDay.day.avgtemp_c}</h2>
   <p>Feels like: -- </p>
@@ -285,7 +325,7 @@ const renderNextOrPrevious = (object) => {
   
   let message = null;
 
-  date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = "Past weather" : message = "Forecast";
+  requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = 'Past weather' : message = 'Forecast';
 
   displayHeaderText.innerHTML = `
   <p>Country: ${object.location.country} </p>
@@ -298,21 +338,40 @@ const renderNextOrPrevious = (object) => {
   `;
 };
 
+const getCityID = (city) => {
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': 'be335f03a5mshac0ad05272f77bfp159179jsn81033b82a8e1',
+		'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
+	}
+};  
+
+  fetch(`https://50k-radio-stations.p.rapidapi.com/get/cities?keyword=${city}`, options)
+	  .then(response => response.json())
+	  .then(response => {
+        const cityID = response.data[0].id;
+        getRadioStation(cityID);
+    })
+
+	  .catch(err => console.error(err));
+  };
+
 
 // Display weather for requested location
 
 const renderWeatherData = (object) => {
-  const displayWeather = document.getElementById("displayWeather");
+  const displayWeather = document.getElementById('displayWeather');
 
-  if (!isDay) displayWeather.classList.add("nightBackground");
-  else displayWeather.classList.remove("nightBackground");
+  if (!isDay) displayWeather.classList.add('nightBackground');
+  else displayWeather.classList.remove('nightBackground');
 
   const displayWeatherText = document.getElementById('displayWeather');
   const displayHeaderText = document.getElementById('weatherHeader');
   const displayFooterText = document.getElementById('weatherFooter');
   
   displayWeatherText.innerHTML = `
-  <img id='condition-icon'src="${object.current.condition.icon}"/>
+  <img id='condition-icon'src='${object.current.condition.icon}'/>
   <h1> ${object.location.name} </h1>
   <h2>C°: ${object.current.temp_c}</h2>
   <p>Feels like: ${object.current.feelslike_c} C°</p>
@@ -330,16 +389,83 @@ const renderWeatherData = (object) => {
   `;
   
   const cityName = object.location.name;
-  getImagefromPexelsAPI(cityName);
+  
+  if (lastCity !== cityName) {
+    getImagefromPexelsAPI(cityName);  
+    lastCity = cityName;
+  }
+  
+  getCityID(cityName);
+  
 }
 
+
+const changeBackgroundImage = (url) => {
+  if (url !== undefined) body.style.backgroundImage = `url('${url}')`;
+  else body.style.backgroundImage = 'linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221))';
+}
+
+const getImagefromPexelsAPI = (city) => {
+  fetch(`https://api.pexels.com/v1/search?query=${city}`,{
+    headers: {
+    Authorization: '563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927'
+    }
+  })
+  .then((resp) => resp.json())
+  .then((data) => {
+    let object = data.photos;      
+    let randomUrl = object[1]?.src.original;    
+
+    if (object.length !== 0) {
+      spinner.removeAttribute('hidden');
+      setTimeout(() => {
+        spinner.setAttribute('hidden', '');
+        changeBackgroundImage(randomUrl);
+      }, 1500); 
+    } else changeBackgroundImage(randomUrl);
+  })
+  .catch((err) => console.error(err));
+};
+
+const getRadioStation = (cityID) => {
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': 'be335f03a5mshac0ad05272f77bfp159179jsn81033b82a8e1',
+		'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
+	}
+};   
+
+// get next page: &page=1
+  fetch(`https://50k-radio-stations.p.rapidapi.com/get/channels?city_id=${cityID}`, options)
+    .then(response => response.json())
+    .then(response => {
+      let url = response.data[0].streams_url.find(({ codec }) => codec === 'mp3').url;
+      radio = new Audio(url);
+    })
+    .catch(err => console.error(err));
+};
+  
+// *** Functions calls ***
+renderDOM();
+
+// *** Event Listeners ***
+
+// Get elements by ID
+const input = document.getElementById('inputElement');
+const submitBtn = document.getElementById('submitBtn');
+const nextBtn = document.getElementById('nextButton');
+const previousBtn = document.getElementById('previousButton');
+const displayHeader = document.getElementById('displayHeader');
+
+// Define event listener functions
 const fadeOut = () => {
-  const input = document.getElementById("inputElement");
+  const input = document.getElementById('inputElement');
   input.setAttribute('placeholder', '');
 };
 
 const fadeIn = () => {
-  const input = document.getElementById("inputElement");
+  const input = document.getElementById('inputElement');
   input.value = '';
   input.setAttribute('placeholder', 'Enter your location');
 };
@@ -357,62 +483,41 @@ const saveFavorite = () => {
   }
 };
 
-const changeBackgroundImage = (url) => {
-  // body.style.removeAttribute('backgroundImage');
-  body.style.backgroundImage = `url('${url}')`;
-}
-
-const getImagefromPexelsAPI = (city) => {
-  // city => object.location.name
-  spinner.removeAttribute('hidden');
-  fetch(`https://api.pexels.com/v1/search?query=${city}`,{
-    headers: {
-    Authorization: "563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927"
-    }
-  })
-    .then((resp) => resp.json())
-    .then((data) => {
-      let object = data.photos;
-      console.log("object", object);
-      // let randomIndex = Math.floor(Math.random() * object.length - 1);
-      let randomUrl = object[1].src.original;
-      // console.log(randomUrl);
-      // console.log(object)
-      spinner.setAttribute('hidden', '');
-      changeBackgroundImage(randomUrl);
-    })
-    .catch((err) => console.error(err));
+const previousNextButton = event => {
+  if ((event.target === previousBtn || event.key === 'ArrowLeft') && lastCityInput && !event.repeat) {
+    requestedDate.setDate(requestedDate.getDate() - 1);
+    urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
+    if (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+      fetchNextOrPrevious('history');
+    } else fetchNextOrPrevious('forecast');
+  } else if ((event.target === nextBtn || event.key === 'ArrowRight') && lastCityInput && !event.repeat && referenceDate > requestedDate) {
+    requestedDate.setDate(requestedDate.getDate() + 1);
+    urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
+    if (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+      fetchNextOrPrevious('history');
+    } else fetchNextOrPrevious('forecast');
+  }
 };
 
-
-  
-// *** Functions calls ***
-renderDOM();
-
-// *** Event Listeners ***
-
-// Get elements by ID
-const input = document.getElementById("inputElement");
-const submitBtn = document.getElementById("submitBtn");
-const nextBtn = document.getElementById('nextButton');
-const previousBtn = document.getElementById('previousButton');
-const displayHeader = document.getElementById('displayHeader');
-
-// Add event listener functions
+// Call event listener functions
 input.addEventListener('input', () => {
   limitSearch();
 });
 
-input.addEventListener('click', (ev) => {
+input.addEventListener('click', () => {
   fadeOut();
   const listValue = inputElement.getAttribute('list');
-  if(listValue === "") {
+  if(listValue === '') {
     inputElement.setAttribute('list', 'favorite');
   }
 });
+
 input.addEventListener('keydown', (event) => {
-  if (event.key === "Enter") {
-    input.value = input.value[0].toUpperCase() + input.value.slice(1);
+  if (event.key === 'Enter' && input.value === '') {
+    enterStop.play();
+  }
+  if (event.key === 'Enter') {
+    input.value = input.value.split(' ').map(city => city[0].toUpperCase() + city.slice(1)).join(' ');
     if (cityNames.includes(input.value)) {
       fetchWeatherData();
       fadeIn();
@@ -421,36 +526,74 @@ input.addEventListener('keydown', (event) => {
       enterStop.play();
     }
   }
+  // previousNextButton(event);
 });
 
-submitBtn.addEventListener("click", () => {
+submitBtn.addEventListener('click', () => {
   fetchWeatherData();
   fadeIn();
-  deleteOptionList();  
+  deleteOptionList();
 });
-
 
 addFavorite.addEventListener('click', saveFavorite);
 
-document.body.addEventListener("click", (event) => {
-  if (event.target === submitBtn && lastCityInput) {
-    urlDate = `&date=${new Date().toISOString().split('T')[0]}`;
-    date = new Date();
-  }
+document.addEventListener('click', previousNextButton);
+document.addEventListener('keydown', previousNextButton);
 
-  if (event.target === previousBtn && lastCityInput) {
-    date.setDate(date.getDate() - 1);
-    urlDate = `&date=${date.toISOString().split('T')[0]}`;
-    if(date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
-      fetchNextOrPrevious("history");
-    } else fetchNextOrPrevious("forecast");
-  } 
+const playBtn = document.getElementById('playBtn');
+// const stopBtn = document.getElementById('stopBtn');
 
-  if (event.target === nextBtn && lastCityInput) {
-    date.setDate(date.getDate() + 1);
-    urlDate = `&date=${date.toISOString().split('T')[0]}`;
-    if(date.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
-      fetchNextOrPrevious("history");
-    } else fetchNextOrPrevious("forecast");
+playBtn.addEventListener('click', () => {
+  console.log(radio.volume)
+  if (!isPlaying) {
+    isPlaying = true;
+    playBtn.textContent = '⏸';
+    playBtn.style.backgroundColor = 'rgb(255, 208, 0)';
+    radio.play();
+  } else if (isPlaying) {
+    isPlaying = false;
+    playBtn.textContent = '▶️';
+    playBtn.style.backgroundColor = 'aquamarine';
+    radio.pause();
   }
 });
+
+const volumePlus = document.getElementById('volumePlus');
+const volumeMinus = document.getElementById('volumeMinus');
+const container = document.getElementById('audioButtons');
+
+volumeMinus.addEventListener('click', () => {
+  console.log(radio.volume);
+
+  if ( radio.volume >= 1) {
+    volumePlus.setAttribute('class', 'active');
+    volumePlus.style.backgroundColor = 'rgba(127, 255, 212, 0.621)';
+  } 
+  if (radio.volume > 0 && radio.volume !== 1.3877787807814457e-16) {
+    radio.volume -= 0.1;
+    transparency -= 0.1;
+    container.style.backgroundColor = `hsla(169, 23%, 68%, ${transparency})`;
+  } else {
+    volumeMinus.removeAttribute('class', 'active');
+    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0)';
+  }
+});
+
+volumePlus.addEventListener('click', () => {
+  console.log(radio.volume);
+
+  if (radio.volume !== 1.3877787807814457e-16) {
+    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.516)';
+  
+    volumeMinus.setAttribute('class', 'active');
+  }
+
+  if (radio.volume < 1) {
+      radio.volume += 0.1;
+      transparency += 0.1;
+      container.style.backgroundColor = `hsla(169, 23%, 68%, ${transparency})`;
+    } else if (radio.volume >= 1) {
+      volumePlus.style.backgroundColor = 'rgba(127, 255, 212)';
+      volumePlus.removeAttribute('class', 'active');
+    }
+  });
