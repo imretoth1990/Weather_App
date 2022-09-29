@@ -20,8 +20,10 @@ let requestedDate = new Date();
 let urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
 
 let isPlaying = false;
-let transparency = 1; 
-let volume = 10;
+let transparency = 0.5; 
+let volume = 5;
+let radioSet = false;
+
 
 // Sound effects
 
@@ -310,14 +312,14 @@ const renderNextOrPrevious = (object) => {
 
   if (forecastDay.date === object.location.localtime.split(' ')[0]) return renderWeatherData(object);
   
-  const displayWeather = document.getElementById('displayWeather');
-  let displayWeatherText = document.getElementById('displayWeather').innerHTML;
-  let displayHeaderText = document.getElementById('weatherHeader').innerHTML;
-  let displayFooterText = document.getElementById('weatherFooter').innerHTML;
+  
+  let displayWeather = document.getElementById('displayWeather');
+  let displayHeader = document.getElementById('weatherHeader');
+  let displayFooter = document.getElementById('weatherFooter');
   
   displayWeather.classList.remove('nightBackground');  
 
-  displayWeatherText = `
+  displayWeather.innerHTML = `
   <img id='condition-icon' src='${forecastDay.day.condition.icon}'/>
   <h1> ${object.location.name} </h1>
   <h2>Avg C°: ${forecastDay.day.avgtemp_c}</h2>
@@ -329,12 +331,12 @@ const renderNextOrPrevious = (object) => {
 
   requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = 'Past weather' : message = 'Forecast';
 
-  displayHeaderText = `
+  displayHeader.innerHTML = `
   <p>Country: ${object.location.country} </p>
   <p>${message}: <b>${new Date(forecastDay.date).toLocaleString('en-us', {weekday: 'long'})}</b>, ${forecastDay.date}</p>
   `;
   
-  displayFooterText = `
+  displayFooter.innerHTML = `
   <p>Short summary: <em>${forecastDay.day.condition.text}</em></p>
   <p>Last updated: yyyy/mm/dd</p>
   `;
@@ -555,7 +557,7 @@ input.addEventListener('keydown', (event) => {
       enterStop.play();
     }
   }
-  // previousNextButton(event);
+  s
 });
 
 submitBtn.addEventListener('click', () => {
@@ -574,6 +576,11 @@ const playBtn = document.getElementById('playBtn');
 
 playBtn.addEventListener('click', () => {
   console.log(radio.volume)
+  if (!radioSet) {
+    radio.volume = 0.5;
+    radioSet = true;
+  }
+
   if (!isPlaying) {
     isPlaying = true;
     playBtn.textContent = '⏸';
