@@ -1,5 +1,5 @@
 // Get data from cities.js
-import cities from './cities.js'
+import cities from './cities.js';
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
@@ -24,11 +24,9 @@ let transparency = 0.5;
 let volume = 5;
 let radioSet = false;
 
-
 // Sound effects
 
 let enterStop = new Audio('enterStop.mp3');
-let radio;
 
 // *** DOM ***
 
@@ -84,6 +82,8 @@ const renderDOM = () => {
   inputElement.setAttribute('list', 'favorite');
   inputElement.setAttribute('name', 'inputElement');
   inputElement.setAttribute('placeholder', 'Enter your location');
+  inputElement.setAttribute('size', '10');
+  inputElement.setAttribute('autocomplete', 'off');
   searchBarContainer.appendChild(inputElement);  
 
   // Create favorite datalist
@@ -136,17 +136,23 @@ const renderDOM = () => {
   displayWeatherContainer.setAttribute('id', 'displayWeatherContainer');
   rootElement.appendChild(displayWeatherContainer);
 
-  const spinner = document.createElement('div');
-  spinner.setAttribute('hidden', '');
-  spinner.setAttribute('id', 'spinner');
-  rootElement.appendChild(spinner);
+  
 
+ 
   // Create audio button container 
   
   const audioButtonContainer = document.createElement('div');
   audioButtonContainer.setAttribute('id', 'audioButtons');
   displayWeatherContainer.appendChild(audioButtonContainer);
 
+
+ // Create display field for radio channel name (Geri)
+
+ const radioNameContainer = document.createElement('div');
+ radioNameContainer.setAttribute('id', 'radioNameContainer');
+ displayWeatherContainer.appendChild(radioNameContainer);
+
+ document.getElementById('radioNameContainer').innerHTML = "No radio station";
 
   // Play button (child from displayWeatherContainer)
 
@@ -190,6 +196,11 @@ const renderDOM = () => {
   <p>Wind: 0 kph</p>
   `;
 
+  const spinner = document.createElement('div');
+  spinner.setAttribute('hidden', '');
+  spinner.setAttribute('id', 'spinner');
+  displayWeatherContainer.appendChild(spinner);
+
   // Display weather footer  
   const weatherFooter = document.createElement('div');
   weatherFooter.setAttribute('id', 'weatherFooter');
@@ -211,6 +222,86 @@ const renderDOM = () => {
 };
 
 // *** Functions ***
+
+
+const radioControlCenter = (radio) => {
+  // RADIO SECTION
+
+// Radio Variables
+
+const volumePlus = document.getElementById('volumePlus');
+const volumeMinus = document.getElementById('volumeMinus');
+const container = document.getElementById('audioButtons');
+const playBtn = document.getElementById('playBtn');
+// Radio functions
+
+const volumeUp = () => {
+  if (volume > 0) {
+    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
+    volumeMinus.setAttribute('class', 'active');
+  }
+if (volume < 10) {
+    radio.volume += 0.1;
+    transparency += 0.1;
+    volume += 1;
+    container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
+} else if (volume === 10) {
+    volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 1)';
+    volumePlus.removeAttribute('class', 'active');
+}
+};
+
+
+const volumeDown = () => {
+if (volume < 10) {
+  volumePlus.setAttribute('class', 'active');
+  volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 0.5)';
+} 
+if (radio.volume > 0 && radio.volume !== 1.3877787807814457e-16) {
+  radio.volume -= 0.1;
+  transparency -= 0.1;
+  volume -= 1;
+  container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
+} 
+
+if (volume === 0){
+  volumeMinus.removeAttribute('class', 'active');
+  volumeMinus.style.backgroundColor = 'rgba(255, 0, 0)';
+}
+};
+
+
+const playStop = () => {    
+  if (!radioSet) {
+    radio.volume = 0.5;
+    radioSet = true;
+  }
+
+  if (!isPlaying) {
+    isPlaying = true;
+    volumeMinus.addEventListener('click', volumeDown);
+    volumePlus.addEventListener('click', volumeUp);
+    playBtn.textContent = '⏸';
+    playBtn.style.backgroundColor = 'rgb(255, 208, 0)';
+    radio.play();
+  } else if (isPlaying) {
+    radio.pause();
+    isPlaying = false;
+    volumeMinus.removeEventListener('click', volumeDown);
+    volumePlus.removeEventListener('click', volumeUp);
+    playBtn.textContent = '▶️';
+    playBtn.style.backgroundColor = 'aquamarine';
+  }
+};
+
+// Event listeners
+
+// const stopBtn = document.getElementById('stopBtn');
+
+playBtn.addEventListener('click', playStop);
+
+};
+
 
 // Define autocomplete function
 
@@ -268,7 +359,7 @@ const deleteOptionList = () => {
       options[i].remove();
     }
     isRendered = null;
-}
+};
 
 // Get data from weather API
 
@@ -286,8 +377,7 @@ const fetchWeatherData = async () => {
   try {
     // Get data
     const response = await fetch(url + method + key + city + urlDate);
-    const data = await response.json(); 
-    console.log(data)  
+    const data = await response.json();
     isDay = data.current.is_day;
     renderWeatherData(data);    
   } catch (error) {
@@ -307,8 +397,8 @@ const fetchNextOrPrevious = async (searchRequirement) => {
 };
 
 const renderNextOrPrevious = (object) => {
-  document.getElementById('displayWeather').classList.remove('nightBackground')
-  let forecastDay = object.forecast.forecastday[0]
+  document.getElementById('displayWeather').classList.remove('nightBackground');
+  let forecastDay = object.forecast.forecastday[0];
 
   if (forecastDay.date === object.location.localtime.split(' ')[0]) return renderWeatherData(object);
   
@@ -329,7 +419,9 @@ const renderNextOrPrevious = (object) => {
   
   let message = null;
 
-  requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0] ? message = 'Past weather' : message = 'Forecast';
+  (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) ?
+  message = 'Past weather' :
+  message = 'Forecast';
 
   displayHeader.innerHTML = `
   <p>Country: ${object.location.country} </p>
@@ -403,15 +495,16 @@ const renderWeatherData = (object) => {
   
   getCityID(cityName);
   
-}
+};
 
 
 const changeBackgroundImage = (url) => {
   if (url !== undefined) body.style.backgroundImage = `url('${url}')`;
   else body.style.backgroundImage = 'linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221))';
-}
+};
 
 const getImagefromPexelsAPI = (city) => {
+  spinner.removeAttribute('hidden');
   fetch(`https://api.pexels.com/v1/search?query=${city}`,{
     headers: {
     Authorization: '563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927'
@@ -419,11 +512,12 @@ const getImagefromPexelsAPI = (city) => {
   })
   .then((resp) => resp.json())
   .then((data) => {
-    let object = data.photos;      
-    let randomUrl = object[1]?.src.original;    
+    let object = data.photos;
+    const randomIndex = Math.floor(Math.random() * object.length);
+    let randomUrl = object[randomIndex]?.src.original;    
+    const spinner = document.getElementById('spinner');
 
     if (object.length !== 0) {
-      spinner.removeAttribute('hidden');
       setTimeout(() => {
         spinner.setAttribute('hidden', '');
         changeBackgroundImage(randomUrl);
@@ -438,7 +532,7 @@ const getRadioStation = (cityID) => {
     method: 'GET',
     headers: {
       'X-RapidAPI-Key': 'be335f03a5mshac0ad05272f77bfp159179jsn81033b82a8e1',
-		'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
+		  'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
 	}
 };   
 
@@ -446,8 +540,16 @@ const getRadioStation = (cityID) => {
   fetch(`https://50k-radio-stations.p.rapidapi.com/get/channels?city_id=${cityID}`, options)
     .then(response => response.json())
     .then(response => {
-      let url = response.data[0].streams_url.find(({ codec }) => codec === 'mp3').url;
-      radio = new Audio(url);
+      const randomIndex = Math.floor(Math.random() * response.data.length);
+      const URL = response.data[randomIndex].streams_url.find(({ codec }) => codec === 'mp3')?.url;
+      if (!URL) {
+        document.getElementById('radioNameContainer').innerHTML = "Radio station is not available";      
+      } else if (URL) {
+        document.getElementById('radioNameContainer').innerHTML = response.data[randomIndex].name;
+      }
+
+      let radio = new Audio(URL);
+      radioControlCenter(radio);
     })
     .catch(err => console.error(err));
 };
@@ -457,25 +559,27 @@ const changeWeatherDisplayImage = (object) => {
   let displayWeather = document.getElementById('displayWeather');
 
   if (isDay) {
-    // Nappali kepek
+    // Day pictures
     switch(object.includes()) {
       case 'rain':
         displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')";
+        break;
       default:
         displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')";
     }
 
 
   } else if (!isDay) {
-    // Ejszakai kepek
+    // Night pictures
     switch(object.includes()) {
       case 'rain':
         displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
+        break;
       default:
         displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
     }
   }
-}
+};
   
 // *** Functions calls ***
 renderDOM();
@@ -504,7 +608,7 @@ const fadeIn = () => {
 const saveFavorite = () => {
   const favDatList = document.getElementById('favorite');
   const option = document.createElement('option');
-  option.setAttribute('value', input.value);
+  option.textContent = input.value;
 
   if (cityNames.includes(input.value)) {
     favDatList.appendChild(option);
@@ -515,7 +619,10 @@ const saveFavorite = () => {
 };
 
 const previousNextButton = event => {
-  if ((event.target === previousBtn || event.key === 'ArrowLeft') && lastCityInput && !event.repeat) {
+  if ((event.target === submitBtn || event.key === "Enter") && lastCityInput) {
+    urlDate = `&date=${new Date().toISOString().split('T')[0]}`;
+    requestedDate = new Date();
+  } else if ((event.target === previousBtn || event.key === 'ArrowLeft') && lastCityInput && !event.repeat) {
     requestedDate.setDate(requestedDate.getDate() - 1);
     urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
     if (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
@@ -557,7 +664,6 @@ input.addEventListener('keydown', (event) => {
       enterStop.play();
     }
   }
-  s
 });
 
 submitBtn.addEventListener('click', () => {
@@ -571,68 +677,3 @@ addFavorite.addEventListener('click', saveFavorite);
 document.addEventListener('click', previousNextButton);
 document.addEventListener('keydown', previousNextButton);
 
-const playBtn = document.getElementById('playBtn');
-// const stopBtn = document.getElementById('stopBtn');
-
-playBtn.addEventListener('click', () => {
-  console.log(radio.volume)
-  if (!radioSet) {
-    radio.volume = 0.5;
-    radioSet = true;
-  }
-
-  if (!isPlaying) {
-    isPlaying = true;
-    playBtn.textContent = '⏸';
-    playBtn.style.backgroundColor = 'rgb(255, 208, 0)';
-    radio.play();
-  } else if (isPlaying) {
-    isPlaying = false;
-    playBtn.textContent = '▶️';
-    playBtn.style.backgroundColor = 'aquamarine';
-    radio.pause();
-  }
-});
-
-const volumePlus = document.getElementById('volumePlus');
-const volumeMinus = document.getElementById('volumeMinus');
-const container = document.getElementById('audioButtons');
-
-volumeMinus.addEventListener('click', () => {
-  console.log(volume);
-
-  if ( volume < 10) {
-    volumePlus.setAttribute('class', 'active');
-    volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 0.5)';
-  } 
-  if (radio.volume > 0 && radio.volume !== 1.3877787807814457e-16) {
-    radio.volume -= 0.1;
-    transparency -= 0.1;
-    volume -= 1;
-    container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
-  } 
-  
-  if (volume === 0){
-    volumeMinus.removeAttribute('class', 'active');
-    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0)';
-  }
-});
-
-volumePlus.addEventListener('click', () => {
-  console.log(volume);
-
-  if (volume > 0) {
-    volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
-    volumeMinus.setAttribute('class', 'active');
-  }
-
-  if (volume < 10) {
-      radio.volume += 0.1;
-      transparency += 0.1;
-      volume += 1;
-      container.style.backgroundColor = `rgb(255, 255, 255,${transparency})`;
-    } else if (volume === 10) {
-      volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 1)';
-      volumePlus.removeAttribute('class', 'active');
-    }
-  });

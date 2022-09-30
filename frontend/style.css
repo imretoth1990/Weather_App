@@ -1,26 +1,20 @@
 html, body {
-   margin-top: 0px;
-   margin-left: 0px;
-   margin-right: 0px;
-   margin-bottom: 0px;
-   min-height: 100vh;
+   margin-top: 0;
+   margin-left: 0;
+   margin-right: 0;
+   margin-bottom: 0;
    display: flex;
    flex-direction: column;
    min-height: 100vh;
-}
-
-body {
-    background-image: linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221));
-    background-repeat: no-repeat;
-    background-size: cover;
-   
+   background-image: linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221));
+   background-repeat: no-repeat;
+   background-size: cover;
 }
 
 /* HEADER */
 #displayHeader {
     background-color: rgba(48, 92, 115, 0.606);
-    height:fit-content;
-    padding: 20px;
+    padding-bottom: 20px;
     font-family: system-ui;
 }
 
@@ -36,8 +30,8 @@ body {
     text-align: center;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: mistyrose;
-    padding-bottom: 30px;
-    margin-top: 5px;
+    margin-top: 0%;
+    padding-top: 20px;
     font-size: 35px;
     font-stretch: wider;
 }
@@ -50,7 +44,6 @@ body {
     align-items: center;
     flex-flow: row wrap;
     justify-content: space-evenly;
-    /* padding: 20px; */
     margin-bottom: 15px;
 }
 
@@ -125,7 +118,6 @@ body {
     border-color:none;
     cursor: pointer;
     font-size: 30px;
-   
     border-color: transparent;
 }
 
@@ -175,6 +167,18 @@ body {
     font-size: 23px;
 }
 
+#radioNameContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: 20px;
+    margin-top: -610px;
+    color: #fff;
+    height: 40px;
+    width: 260px;
+    border-radius: 30px;
+}
 
 button {
     background-color: rgba(255, 255, 255, 0.342);
@@ -193,6 +197,7 @@ button:hover {
     justify-content: center;
     align-items: center;
     height: 550px;
+    margin-top: 80px;
 }
 
 #displayWeather {
@@ -230,7 +235,7 @@ button:hover {
     justify-content: space-between;
     margin-top: -300px;
     background-color: rgba(48, 92, 115, 0.627);
-    width: 60%;
+    width: 420px;
     border-radius: 30px;
     padding-left: 25px; 
     padding-right: 25px;
@@ -247,7 +252,7 @@ button:hover {
     justify-content: space-between;
     margin-top: 300px;
     background-color: rgba(48, 92, 115, 0.627);
-    width: 60%;
+    width: 420px;
     border-radius: 30px;
     padding-left: 25px; 
     padding-right: 25px;
@@ -263,10 +268,7 @@ button:hover {
 }
 
 #spinner:not([hidden]) {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 55px;
+    position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -293,11 +295,12 @@ button:hover {
   }
   
   #pageFooter {
-    
+    position: absolute;
     background-color: rgba(48, 92, 115, 0.589);
-    color: rgba(255, 255, 255, 0.639);
-    padding: 10px;
-    margin-top: auto;
+    color: rgba(255, 255, 255, 0.537);
+    padding-top: 10px;
+    padding-bottom: 10px;
+    width: 100%;
     text-align: center;
     bottom: 0;
 }
