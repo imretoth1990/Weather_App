@@ -129,7 +129,7 @@ const renderDOM = () => {
   // Display app title
 
   const applicationTitle = document.getElementById('appTitle');
-  applicationTitle.textContent = 'Weather App';
+  applicationTitle.textContent = 'WeatherApp';
 
   // Display weather container
   const displayWeatherContainer = document.createElement('div');
@@ -504,7 +504,7 @@ const changeBackgroundImage = (url) => {
 };
 
 const getImagefromPexelsAPI = (city) => {
-  spinner.removeAttribute('hidden');
+  
   fetch(`https://api.pexels.com/v1/search?query=${city}`,{
     headers: {
     Authorization: '563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927'
@@ -518,9 +518,10 @@ const getImagefromPexelsAPI = (city) => {
     const spinner = document.getElementById('spinner');
 
     if (object.length !== 0) {
+      spinner.removeAttribute('hidden');
       setTimeout(() => {
-        spinner.setAttribute('hidden', '');
         changeBackgroundImage(randomUrl);
+        spinner.setAttribute('hidden', '');
       }, 1500); 
     } else changeBackgroundImage(randomUrl);
   })
