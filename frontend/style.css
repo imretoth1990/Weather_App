@@ -293,15 +293,15 @@ button:hover {
     to {
       transform: rotate(360deg);
     }
-  }
+  } 
   
   #pageFooter {
-    position: absolute;
+    position: sticky;
     background-color: rgba(48, 92, 115, 0.589);
     color: rgba(255, 255, 255, 0.537);
     padding-top: 10px;
     padding-bottom: 10px;
     width: 100%;
-    text-align: center;
+    text-align: center; 
     bottom: 0;
 }

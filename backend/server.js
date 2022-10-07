@@ -8,12 +8,12 @@ function sayBye(user) {
 
 export {sayHi, sayBye}*/
 
-// Server
+// Server 
 
 const http = require("http");
 // const fs = require("fs").promises;
 const ip = "127.0.0.1";
-const port = 3000;
+const port = 3000; 
 
 // Define functions
 

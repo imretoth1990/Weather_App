@@ -3,15 +3,17 @@ import cities from './cities.js';
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
-const url = 'https://api.weatherapi.com/v1';
-const key = '?key=489f1639341049318ba122521222609';
+const url = 'https://api.weatherapi.com/v1'; // const BASE_URL = ...
+const key = '?key=489f1639341049318ba122521222609'; // dotenv fájlba az érzékeny adatokat kimenteni és aztán abból behívni őket
 const body = document.querySelector('body');
 const rootElement = document.getElementById('root');
 
 let isRendered = null;
 let isDay = null;
-let lastCityInput = null;
+let lastCityInput = null; 
 let lastCity = null;
+
+// let isRendered, isDay, lastCityInput, lastCity;
 
 let referenceDate = new Date();
 referenceDate.setDate(referenceDate.getDate() + 15);
@@ -33,6 +35,7 @@ let enterStop = new Audio('enterStop.mp3');
 // Create Label, Input field and Submit Button
 
 const renderDOM = () => {
+
   // Display header
   const displayHeader = document.createElement('div');
   displayHeader.setAttribute('id', 'displayHeader');
@@ -257,6 +260,7 @@ if (volume < 10) {
   volumePlus.setAttribute('class', 'active');
   volumePlus.style.backgroundColor = 'rgba(172, 255, 47, 0.5)';
 } 
+
 if (radio.volume > 0 && radio.volume !== 1.3877787807814457e-16) {
   radio.volume -= 0.1;
   transparency -= 0.1;
@@ -417,11 +421,7 @@ const renderNextOrPrevious = (object) => {
   <p>Max wind: ${forecastDay.day.maxwind_kph} kph</p>
   `;
   
-  let message = null;
-
-  (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) ?
-  message = 'Past weather' :
-  message = 'Forecast';
+  const message = (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) ? 'Past weather' : 'Forecast';
 
   displayHeader.innerHTML = `
   <p>Country: ${object.location.country} </p>
@@ -449,7 +449,6 @@ const getCityID = (city) => {
         const cityID = response.data[0].id;
         getRadioStation(cityID);
     })
-
 	  .catch(err => console.error(err));
   };
 
@@ -493,13 +492,12 @@ const renderWeatherData = (object) => {
     lastCity = cityName;
   }
   
-  getCityID(cityName);
-  
+  getCityID(cityName);  
 };
 
 
 const changeBackgroundImage = (url) => {
-  if (url !== undefined) body.style.backgroundImage = `url('${url}')`;
+  if (url !== undefined) body.style.backgroundImage = `url('${url}')`; // if (url)...
   else body.style.backgroundImage = 'linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221))';
 };
 
@@ -507,7 +505,7 @@ const getImagefromPexelsAPI = (city) => {
   
   fetch(`https://api.pexels.com/v1/search?query=${city}`,{
     headers: {
-    Authorization: '563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927'
+    Authorization: '563492ad6f91700001000001b67eb2f1acb841f8ae74ace0d77f4927' // api key into dotenv file
     }
   })
   .then((resp) => resp.json())
@@ -555,31 +553,46 @@ const getRadioStation = (cityID) => {
     .catch(err => console.error(err));
 };
 
-const changeWeatherDisplayImage = (object) => {
+const changeWeatherDisplayImage = (inputValue) => {
+
+  let currentWeatherText = inputValue.toLowerCase();
 
   let displayWeather = document.getElementById('displayWeather');
 
-  if (isDay) {
+  // if (isDay) {
+  //   // Day pictures
+  //   switch(currentWeatherText.includes()) {
+  //     case 'rain':
+  //       displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')";
+  //       break;
+  //     default:
+  //       displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')";
+  //   }
+
+
+  // } else if (!isDay) {
+  //   // Night pictures
+  //   switch(currentWeatherText.includes()) {
+  //     case 'rain':
+  //       displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
+  //       break;
+  //     default:
+  //       displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
+  //   }
+  // }
+
     // Day pictures
-    switch(object.includes()) {
-      case 'rain':
-        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')";
+    switch(currentWeatherText.includes()) {
+      case 'cloud':
+        isDay 
+        ? displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')" 
+        : displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
         break;
       default:
-        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')";
+        isDay 
+        ? displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')" 
+        : displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
     }
-
-
-  } else if (!isDay) {
-    // Night pictures
-    switch(object.includes()) {
-      case 'rain':
-        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
-        break;
-      default:
-        displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
-    }
-  }
 };
   
 // *** Functions calls ***
