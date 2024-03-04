@@ -3,7 +3,7 @@ import cities from './cities.js';
 const cityNames = Object.keys(cities);
 
 // *** Variables ***
-const url = 'https://api.weatherapi.com/v1'; // const BASE_URL = ...
+const BASE_URL = 'https://api.weatherapi.com/v1';
 const key = '?key=489f1639341049318ba122521222609'; // dotenv fájlba az érzékeny adatokat kimenteni és aztán abból behívni őket
 const body = document.querySelector('body');
 const rootElement = document.getElementById('root');
@@ -139,8 +139,6 @@ const renderDOM = () => {
   displayWeatherContainer.setAttribute('id', 'displayWeatherContainer');
   rootElement.appendChild(displayWeatherContainer);
 
-  
-
  
   // Create audio button container 
   
@@ -227,8 +225,8 @@ const renderDOM = () => {
 // *** Functions ***
 
 
-const radioControlCenter = (radio) => {
-  // RADIO SECTION
+const radioControlCenter = radio => {
+// RADIO SECTION
 
 // Radio Variables
 
@@ -239,10 +237,11 @@ const playBtn = document.getElementById('playBtn');
 // Radio functions
 
 const volumeUp = () => {
-  if (volume > 0) {
+if (volume > 0) {
     volumeMinus.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
     volumeMinus.setAttribute('class', 'active');
-  }
+}
+
 if (volume < 10) {
     radio.volume += 0.1;
     transparency += 0.1;
@@ -303,7 +302,6 @@ const playStop = () => {
 // const stopBtn = document.getElementById('stopBtn');
 
 playBtn.addEventListener('click', playStop);
-
 };
 
 
@@ -339,10 +337,12 @@ const limitSearch = () => {
   const input = document.getElementById('inputElement');
   const userInput = input.value;
   const inputLength = userInput.length;
+  
   if (inputLength !== 0) {
     input.removeAttribute('list', 'favorite');
     input.setAttribute('list', 'datalist');
   }
+
   if (inputLength > 2 && !isRendered) {
     const filteredCities = cityNames.filter((item) => item.toLowerCase().includes(userInput.toLowerCase()));
     renderAutocomplete(filteredCities);
@@ -376,11 +376,12 @@ const fetchWeatherData = async () => {
   if (cityInput !== lastCityInput && cityInput !== '') lastCityInput = input.value;  
   let city = `&q=${lastCityInput}`;
 
+  // guard clause
   if (!lastCityInput) return;
 
   try {
     // Get data
-    const response = await fetch(url + method + key + city + urlDate);
+    const response = await fetch(BASE_URL + method + key + city + urlDate);
     const data = await response.json();
     isDay = data.current.is_day;
     renderWeatherData(data);    
@@ -392,7 +393,7 @@ const fetchWeatherData = async () => {
 const fetchNextOrPrevious = async (searchRequirement) => {
   const method = `/${searchRequirement}.json`;
   try {
-    const response = await fetch(url + method + key + `&q=${lastCityInput}` + urlDate);
+    const response = await fetch(BASE_URL + method + key + `&q=${lastCityInput}` + urlDate);
     const data = await response.json(); 
     renderNextOrPrevious(data);
   } catch (error) {
@@ -400,12 +401,12 @@ const fetchNextOrPrevious = async (searchRequirement) => {
   }
 };
 
-const renderNextOrPrevious = (object) => {
+const renderNextOrPrevious = object => {
   document.getElementById('displayWeather').classList.remove('nightBackground');
   let forecastDay = object.forecast.forecastday[0];
 
+  // guard clause
   if (forecastDay.date === object.location.localtime.split(' ')[0]) return renderWeatherData(object);
-  
   
   let displayWeather = document.getElementById('displayWeather');
   let displayHeader = document.getElementById('weatherHeader');
@@ -420,8 +421,9 @@ const renderNextOrPrevious = (object) => {
   <p>Feels like: -- </p>
   <p>Max wind: ${forecastDay.day.maxwind_kph} kph</p>
   `;
-  
-  const message = (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) ? 'Past weather' : 'Forecast';
+
+  const condition = requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0];
+  const message = condition ? 'Past weather' : 'Forecast';
 
   displayHeader.innerHTML = `
   <p>Country: ${object.location.country} </p>
@@ -434,7 +436,7 @@ const renderNextOrPrevious = (object) => {
   `;
 };
 
-const getCityID = (city) => {
+const getCityID = city => {
   const options = {
     method: 'GET',
     headers: {
@@ -496,12 +498,12 @@ const renderWeatherData = (object) => {
 };
 
 
-const changeBackgroundImage = (url) => {
-  if (url !== undefined) body.style.backgroundImage = `url('${url}')`; // if (url)...
+const changeBackgroundImage = url => {
+  if (url) body.style.backgroundImage = `url('${url}')`;
   else body.style.backgroundImage = 'linear-gradient(rgb(90, 125, 143),rgb(110, 155, 159), rgb(131, 193, 195), rgb(210, 223, 221))';
 };
 
-const getImagefromPexelsAPI = (city) => {
+const getImagefromPexelsAPI = city => {
   
   fetch(`https://api.pexels.com/v1/search?query=${city}`,{
     headers: {
@@ -510,9 +512,9 @@ const getImagefromPexelsAPI = (city) => {
   })
   .then((resp) => resp.json())
   .then((data) => {
-    let object = data.photos;
+    const object = data.photos;
     const randomIndex = Math.floor(Math.random() * object.length);
-    let randomUrl = object[randomIndex]?.src.original;    
+    const randomUrl = object[randomIndex]?.src.original;
     const spinner = document.getElementById('spinner');
 
     if (object.length !== 0) {
@@ -526,14 +528,14 @@ const getImagefromPexelsAPI = (city) => {
   .catch((err) => console.error(err));
 };
 
-const getRadioStation = (cityID) => {
+const getRadioStation = cityID => {
   const options = {
     method: 'GET',
     headers: {
       'X-RapidAPI-Key': 'be335f03a5mshac0ad05272f77bfp159179jsn81033b82a8e1',
 		  'X-RapidAPI-Host': '50k-radio-stations.p.rapidapi.com'
 	}
-};   
+};
 
 // get next page: &page=1
   fetch(`https://50k-radio-stations.p.rapidapi.com/get/channels?city_id=${cityID}`, options)
@@ -541,19 +543,20 @@ const getRadioStation = (cityID) => {
     .then(response => {
       const randomIndex = Math.floor(Math.random() * response.data.length);
       const URL = response.data[randomIndex].streams_url.find(({ codec }) => codec === 'mp3')?.url;
+
       if (!URL) {
-        document.getElementById('radioNameContainer').innerHTML = "Radio station is not available";      
+        document.getElementById('radioNameContainer').textContent = "Radio station is not available";
       } else if (URL) {
-        document.getElementById('radioNameContainer').innerHTML = response.data[randomIndex].name;
+        document.getElementById('radioNameContainer').textContent = response.data[randomIndex].name;
       }
 
-      let radio = new Audio(URL);
+      const radio = new Audio(URL);
       radioControlCenter(radio);
     })
     .catch(err => console.error(err));
 };
 
-const changeWeatherDisplayImage = (inputValue) => {
+const changeWeatherDisplayImage = inputValue => {
 
   let currentWeatherText = inputValue.toLowerCase();
 
@@ -584,14 +587,14 @@ const changeWeatherDisplayImage = (inputValue) => {
     // Day pictures
     switch(currentWeatherText.includes()) {
       case 'cloud':
-        isDay 
-        ? displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/rain_isDay.jpeg')" 
-        : displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/night_rainy.jpeg')";
+        displayWeather.style.backgroundImage = isDay 
+        ? "url('/frontend/displayWeather_images/rain_isDay.jpeg')" 
+        : "url('/frontend/displayWeather_images/night_rainy.jpeg')";
         break;
       default:
-        isDay 
-        ? displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/sunny_isDay.jpeg')" 
-        : displayWeather.style.backgroundImage = "url('/frontend/displayWeather_images/clear_night.jpeg')";
+        displayWeather.style.backgroundImage = isDay
+        ? "url('/frontend/displayWeather_images/sunny_isDay.jpeg')" 
+        : "url('/frontend/displayWeather_images/clear_night.jpeg')";
     }
 };
   
@@ -633,19 +636,22 @@ const saveFavorite = () => {
 };
 
 const previousNextButton = event => {
+  const ISO_currentDate = new Date().toISOString().split('T')[0];
+  let ISO_requestedDate = requestedDate.toISOString().split('T')[0];
+
   if ((event.target === submitBtn || event.key === "Enter") && lastCityInput) {
-    urlDate = `&date=${new Date().toISOString().split('T')[0]}`;
+    urlDate = `&date=${ISO_currentDate}`;
     requestedDate = new Date();
   } else if ((event.target === previousBtn || event.key === 'ArrowLeft') && lastCityInput && !event.repeat) {
     requestedDate.setDate(requestedDate.getDate() - 1);
-    urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
-    if (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+    urlDate = `&date=${ISO_requestedDate}`;
+    if (ISO_requestedDate < ISO_currentDate) {
       fetchNextOrPrevious('history');
     } else fetchNextOrPrevious('forecast');
   } else if ((event.target === nextBtn || event.key === 'ArrowRight') && lastCityInput && !event.repeat && referenceDate > requestedDate) {
     requestedDate.setDate(requestedDate.getDate() + 1);
-    urlDate = `&date=${requestedDate.toISOString().split('T')[0]}`;
-    if (requestedDate.toISOString().split('T')[0] < new Date().toISOString().split('T')[0]) {
+    urlDate = `&date=${ISO_requestedDate}`;
+    if (ISO_requestedDate < ISO_currentDate) {
       fetchNextOrPrevious('history');
     } else fetchNextOrPrevious('forecast');
   }
